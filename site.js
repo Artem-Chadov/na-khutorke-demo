@@ -1,132 +1,216 @@
 'use strict';
-
 document.documentElement.classList.add('has-js');
 
-const menu = document.querySelector('.main-nav');
+function loadPhoto(image) {
+  image?.dispatchEvent(new Event('photo:request', { bubbles:true }));
+  if (!image?.dataset.deferSrc) return;
+  const {deferSrc, deferSrcset} = image.dataset;
+  image.addEventListener('error', () => {
+    image.removeAttribute('src');
+    image.removeAttribute('srcset');
+    image.dataset.deferSrc = deferSrc;
+    if (deferSrcset) image.dataset.deferSrcset = deferSrcset;
+  }, {once:true});
+  if (deferSrcset) image.srcset = deferSrcset;
+  image.src = deferSrc;
+  delete image.dataset.deferSrc;
+  delete image.dataset.deferSrcset;
+}
+
+const navigation = document.querySelector('.main-nav');
 const menuButton = document.querySelector('.menu-toggle');
-const narrowScreen = matchMedia('(max-width: 720px)');
-
-function setMenu(open, returnFocus = false) {
-  menu.classList.toggle('is-open', open);
-  menuButton.setAttribute('aria-expanded', String(open));
-  menuButton.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
-  if (open) menu.querySelector('a').focus();
-  if (returnFocus) menuButton.focus();
+function closeMenu(focus = false) {
+  if (!navigation || !menuButton) return;
+  navigation.classList.remove('is-open');
+  menuButton.setAttribute('aria-expanded', 'false');
+  menuButton.setAttribute('aria-label', 'Открыть меню');
+  if (focus) menuButton.focus();
 }
-
-menuButton.addEventListener('click', () => {
-  const open = !menu.classList.contains('is-open');
-  setMenu(open, !open);
+menuButton?.addEventListener('click', () => {
+  if (navigation.classList.contains('is-open')) { closeMenu(true); return; }
+  navigation.classList.add('is-open');
+  menuButton.setAttribute('aria-expanded', 'true');
+  menuButton.setAttribute('aria-label', 'Закрыть меню');
+  navigation.querySelector('a').focus();
 });
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && menu.classList.contains('is-open')) {
-    setMenu(false, true);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && navigation?.classList.contains('is-open')) closeMenu(true);
+});
+document.addEventListener('click', event => {
+  if (navigation?.classList.contains('is-open') && (!event.target.closest('.masthead') || event.target.closest('a'))) closeMenu();
+});
+matchMedia('(max-width:760px)').addEventListener('change', () => closeMenu());
+
+const cover = document.querySelector('.cover');
+if (cover) {
+  const toggle = cover.querySelector('.peek');
+  const inside = cover.querySelector('.cover-sauna');
+  const picture = inside.querySelector('img');
+  const label = toggle.querySelector('.peek-label');
+  const returnPhoto = toggle.querySelector('.peek-outside');
+  returnPhoto.hidden = true;
+  const status = cover.querySelector('[data-cover-status]');
+  let requested = false;
+  function showScene() {
+    cover.dataset.scene = requested ? 'inside' : 'outside';
+    returnPhoto.hidden = !requested;
+    toggle.setAttribute('aria-pressed', String(requested));
+    inside.setAttribute('aria-hidden', String(!requested));
+    cover.querySelector('.cover-estate').setAttribute('aria-hidden', String(requested));
+    toggle.setAttribute('aria-label', requested ? 'Показать двор усадьбы' : 'Показать парную');
+    label.textContent = requested ? 'Вернуться во двор' : 'Заглянуть в парную';
   }
-});
-document.addEventListener('click', (event) => {
-  if (menu.classList.contains('is-open') && !event.target.closest('.masthead')) setMenu(false);
-});
-menu.addEventListener('click', (event) => {
-  if (event.target.closest('a')) setMenu(false);
-});
-narrowScreen.addEventListener('change', () => setMenu(false));
-
-function loadSelectedPhoto(picture) {
-  if (!picture.dataset.deferSrc) return;
-  if (picture.dataset.deferSrcset) picture.srcset = picture.dataset.deferSrcset;
-  picture.src = picture.dataset.deferSrc;
-  delete picture.dataset.deferSrcset;
-  delete picture.dataset.deferSrc;
-}
-
-const gallery = document.querySelector('[data-cover-gallery]');
-if (gallery) {
-  const controls = gallery.querySelector('.cover-choices');
-  const choices = Array.from(controls.querySelectorAll('button'));
-  const shots = choices.map(choice => document.getElementById(choice.getAttribute('aria-controls')));
-  const status = gallery.querySelector('[data-cover-status]');
-  let requested = 0;
-
-  function reveal(index) {
-    if (index !== requested) return;
-    shots.forEach((shot, position) => {
-      const selected = index === position;
-      shot.classList.toggle('is-current', selected);
-      shot.setAttribute('aria-hidden', String(!selected));
-      choices[position].setAttribute('aria-pressed', String(selected));
-    });
-  }
-
-  choices.forEach((choice, index) => {
-    const shot = shots[index];
-    const picture = shot.querySelector('img');
-    picture.addEventListener('load', () => reveal(index));
-    picture.addEventListener('error', () => {
-      if (requested === index) status.textContent = 'Не удалось загрузить фотографию.';
-    });
-    choice.addEventListener('click', () => {
-      requested = index;
-      status.textContent = '';
-      shot.hidden = false;
-      picture.loading = 'eager';
-      loadSelectedPhoto(picture);
-      if (picture.complete && picture.naturalWidth > 0) reveal(index);
-    });
+  picture.addEventListener('load', showScene);
+  picture.addEventListener('error', () => {
+    if (requested) { requested = false; showScene(); status.textContent = 'Фотография парной не загрузилась. Попробуйте ещё раз.'; }
   });
-  controls.hidden = false;
+  toggle.hidden = false;
+  toggle.addEventListener('click', () => {
+    requested = !requested;
+    status.textContent = '';
+    if (!requested) { showScene(); return; }
+    inside.hidden = false;
+    loadPhoto(picture);
+    returnPhoto.hidden = false;
+    loadPhoto(returnPhoto);
+    if (picture.complete && picture.naturalWidth) showScene();
+  });
 }
 
-const explorer = document.querySelector('[data-room-explorer]');
-if (explorer) {
-  const tablist = explorer.querySelector('[data-room-tabs]');
-  const tabs = Array.from(tablist.querySelectorAll('[data-room]'));
-  const panels = tabs.map((tab) => document.getElementById('panel-' + tab.dataset.room));
+const fragmentParams = () => new URLSearchParams(location.hash.slice(1));
+const entries = [...document.querySelectorAll('.room-entry')];
+const roomButtons = entries.map(entry => entry.querySelector('[data-room]'));
 
-  tablist.setAttribute('role', 'tablist');
-  tabs.forEach((tab, index) => {
-    tab.setAttribute('role', 'tab');
-    tab.setAttribute('aria-controls', panels[index].id);
-    panels[index].setAttribute('role', 'tabpanel');
-    panels[index].tabIndex = 0;
-  });
-
-  function showRoom(current, animate) {
-    tabs.forEach((tab, index) => {
-      const selected = current === index;
-      tab.setAttribute('aria-selected', String(selected));
-      tab.tabIndex = selected ? 0 : -1;
-      panels[index].hidden = !selected;
-      panels[index].classList.toggle('is-changing', selected && animate);
-      if (selected) loadSelectedPhoto(panels[index].querySelector('img'));
-    });
-    if (animate) history.replaceState({ ...history.state, selectedRoom: tabs[current].dataset.room }, '');
+function selectRoom(id, fromGuest = false) {
+  const selected = entries.find(entry => entry.id === id);
+  if (!selected) return;
+  for (const entry of entries) {
+    const active = entry === selected;
+    entry.toggleAttribute('data-selected', active);
+    entry.toggleAttribute('data-just-opened', active && fromGuest);
+    const button = entry.querySelector('.room-toggle');
+    button.setAttribute('aria-expanded', String(active));
+    button.setAttribute('aria-disabled', String(active));
+    entry.querySelector('.room-panel').hidden = !active;
   }
+  loadPhoto(selected.querySelector('.room-shot img'));
+  if (fromGuest) {
+    history.replaceState({...history.state, selectedRoom:id}, '');
+    if (matchMedia('(max-width:760px)').matches && selected.getBoundingClientRect().top < -12) {
+      selected.scrollIntoView({block:'start'});
+    }
+  }
+}
 
-  const restored = tabs.findIndex(tab => tab.dataset.room === history.state?.selectedRoom);
-  showRoom(Math.max(restored, 0), false);
-  tabs.forEach((tab, index) => {
-    tab.addEventListener('click', (event) => {
-      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+function restoreRoom() {
+  const params = fragmentParams();
+  const section = params.get('at') || location.hash.slice(1);
+  const fromURL = ['zaly','russkiy','turetskiy','privat'].includes(section)
+    ? (params.get('zal') || (section === 'zaly' ? new URLSearchParams(location.search).get('zal') : section)) : null;
+  const pick = [history.state?.selectedRoom,fromURL].find(id=>entries.some(entry=>entry.id===id)) || entries[0]?.id;
+  selectRoom(pick);
+}
+
+if (entries.length) {
+  restoreRoom();
+  roomButtons.forEach((button, index) => {
+    button.addEventListener('click', () => { if (!entries[index].hasAttribute('data-selected')) selectRoom(button.dataset.room,true); });
+    button.addEventListener('keydown', event => {
+      const keys = {ArrowDown:(index+1)%entries.length,ArrowUp:(index+entries.length-1)%entries.length,Home:0,End:entries.length-1};
+      if (!Object.hasOwn(keys,event.key)) return;
       event.preventDefault();
-      if (tab.getAttribute('aria-selected') !== 'true') showRoom(index, true);
+      roomButtons[keys[event.key]].focus();
     });
-    tab.addEventListener('keydown', (event) => {
-      let next;
-      switch (event.key) {
-        case 'ArrowRight': next = (index + 1) % tabs.length; break;
-        case 'ArrowLeft': next = (index + tabs.length - 1) % tabs.length; break;
-        case 'Home': next = 0; break;
-        case 'End': next = tabs.length - 1; break;
-        case ' ':
-        case 'Enter':
-          event.preventDefault();
-          showRoom(index, true);
-          return;
-        default: return;
+  });
+  window.addEventListener('popstate', restoreRoom);
+}
+
+// Сведения о выбранном визите остаются во фрагменте: ссылки работают и после пересылки, и с диска.
+if (!fragmentParams().has('p')) {
+  for (const cta of document.querySelectorAll('a[data-book-space]')) {
+    const params = new URLSearchParams({at:'zapis',zal:cta.dataset.bookSpace});
+    if (cta.dataset.bookGuests) params.set('gosti',cta.dataset.bookGuests);
+    cta.setAttribute('href','#'+params);
+  }
+  function scrollToSelection() {
+    if (fragmentParams().get('at')==='zapis') {
+      const target=document.getElementById('zapis');
+      target?.scrollIntoView();
+    }
+  }
+  window.addEventListener('hashchange', scrollToSelection);
+  if(fragmentParams().has('at')) window.addEventListener('load', scrollToSelection, {once:true});
+}
+
+// Клавиатура продолжает путь с первого поля, а возврат ведёт к тому действию, откуда пришёл гость.
+if (document.getElementById('zapis')) {
+  const anchors = [...document.querySelectorAll('a[href]')];
+  const sectionOf = url => new URLSearchParams(url.hash.slice(1)).get('at') || url.hash.slice(1);
+  let clickedDestination = null;
+  function focusAfterNavigation() {
+    const current = new URL(location.href);
+    const returning = !clickedDestination;
+    clickedDestination = null;
+    const source = returning && Number.isInteger(history.state?.landingFocus)
+      ? anchors[history.state.landingFocus] : null;
+    requestAnimationFrame(() => {
+      if (sectionOf(current) === 'zapis') {
+        document.getElementById('space')?.focus({preventScroll:true});
+      } else if (source) {
+        const target = source.getClientRects().length ? source : menuButton;
+        target?.focus({preventScroll:true});
+        const rect = target?.getBoundingClientRect();
+        if (rect && (rect.bottom < 0 || rect.top > innerHeight)) target.scrollIntoView({block:'nearest', behavior:'instant'});
       }
-      event.preventDefault();
-      showRoom(next, true);
-      tabs[next].focus();
     });
+  }
+  document.addEventListener('click', event => {
+    const link = event.target.closest?.('a[href]');
+    if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+    const next = new URL(link.href);
+    if (next.origin !== location.origin || next.pathname !== location.pathname || next.search !== location.search || !next.hash) return;
+    if (next.href !== location.href) history.replaceState({...history.state, landingFocus:anchors.indexOf(link)}, '');
+    clickedDestination = next.href;
+    if (next.href === location.href) focusAfterNavigation();
+  }, true);
+  window.addEventListener('hashchange', focusAfterNavigation);
+}
+
+const album = document.getElementById('album');
+if (album && typeof album.showModal === 'function') {
+  const slides = [...album.querySelectorAll('[data-album-slide]')];
+  const position = album.querySelector('[data-album-position]');
+  const close = album.querySelector('[data-album-close]');
+  let activeIndex = 0;
+  let opener;
+  function openSlide(next) {
+    activeIndex = (next + slides.length) % slides.length;
+    slides.forEach((slide,index)=>{slide.hidden=index!==activeIndex;});
+    const current = slides[activeIndex];
+    loadPhoto(current.querySelector('img'));
+    position.textContent = (activeIndex+1)+' из '+slides.length;
+  }
+  for (const button of document.querySelectorAll('[data-open-photo]')) {
+    button.hidden = false;
+    button.addEventListener('click', () => {
+      opener=button;
+      openSlide(Number(button.dataset.openPhoto));
+      album.showModal();
+      close.focus({preventScroll:true});
+    });
+  }
+  album.querySelectorAll('[data-album-step]').forEach(button=>{
+    button.addEventListener('click',()=>openSlide(activeIndex+Number(button.dataset.albumStep)));
+  });
+  album.addEventListener('keydown',event=>{
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    openSlide(activeIndex + (event.key === 'ArrowLeft' ? -1 : 1));
+  });
+  close.addEventListener('click',()=>album.close());
+  album.addEventListener('close',()=>opener?.focus({preventScroll:true}));
+  album.addEventListener('click',event=>{
+    const box=album.getBoundingClientRect();
+    if (event.target===album && (event.clientX<box.left||event.clientX>box.right||event.clientY<box.top||event.clientY>box.bottom)) album.close();
   });
 }
