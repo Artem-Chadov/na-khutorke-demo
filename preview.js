@@ -2,6 +2,11 @@
 
 const previewBase = new URL(document.baseURI);
 const sessionKey = 'hutorok-preview:' + previewBase.pathname;
+const previewVersion = new URLSearchParams(location.search).get('v');
+
+function keepPreviewVersion(url) {
+  if (previewVersion && !url.searchParams.has('v')) url.searchParams.set('v', previewVersion);
+}
 
 function scrollToPreviewSection() {
   const section = new URLSearchParams(location.hash.slice(1)).get('at');
@@ -39,6 +44,7 @@ function shareableLinks(html, token) {
       address.pathname = current.pathname;
       address.search = current.search;
     }
+    keepPreviewVersion(address);
     address.hash = fragment.toString();
     const next = (address.pathname + address.search + address.hash).replaceAll('&', '&amp;');
     return tag.replace(/\shref="[^"]+"/, ' href="' + next + '"');
@@ -78,6 +84,7 @@ function showRecovery(message) {
           !/^(?:(?:index|zaly|kottedzh|zapis|404)\.html)?$/.test(relative) || !/^[A-Za-z0-9_-]{22}$/.test(supplied || '')) {
         throw new Error('Неполная ссылка.');
       }
+      keepPreviewVersion(url);
       if (url.pathname === location.pathname && url.search === location.search) {
         history.replaceState(history.state, '', url.href);
         location.reload();

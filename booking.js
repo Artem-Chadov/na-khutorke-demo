@@ -277,13 +277,14 @@
     const hash = new URLSearchParams(location.hash.slice(1));
     const query = new URLSearchParams(location.search);
     // Обычный якорь наследует query от страницы, но сам комнату не выбирает.
-    const explicit = hash.has('zal') || hash.has('gosti');
-    const anchor = hash.has('p') ? hash.get('at') || '' : location.hash.slice(1);
+    const anchor = hash.get('at') || location.hash.slice(1);
+    const anchoredRoom = [...document.querySelectorAll('.room-entry')].find(entry => entry.id === anchor)?.id;
+    const explicit = hash.has('zal') || hash.has('gosti') || Boolean(anchoredRoom);
     const queryEntry = location.pathname + location.search + '#' + anchor;
     if (!explicit && !first && !queryChanged && history.state?.visitQueryPreset !== queryEntry) return;
     // Один предвыбор берётся из одного адреса: число из старого query не относится к новому залу во фрагменте.
     const preset = explicit ? hash : query;
-    const room = preset.get('zal');
+    const room = preset.get('zal') || anchoredRoom;
     const count = preset.get('gosti');
     if (room === null && count === null) return;
     applyPreset(room, count);

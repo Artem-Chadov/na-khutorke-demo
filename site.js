@@ -87,36 +87,53 @@ function selectRoom(id, fromGuest = false) {
   for (const entry of entries) {
     const active = entry === selected;
     entry.toggleAttribute('data-selected', active);
-    entry.toggleAttribute('data-just-opened', active && fromGuest);
     const button = entry.querySelector('.room-toggle');
     button.setAttribute('aria-expanded', String(active));
     button.setAttribute('aria-disabled', String(active));
-    entry.querySelector('.room-panel').hidden = !active;
+    const panel = document.getElementById(button.getAttribute('aria-controls'));
+    panel.hidden = !active;
+    panel.toggleAttribute('data-current', active);
+    panel.toggleAttribute('data-opened', active && fromGuest);
   }
-  loadPhoto(selected.querySelector('.room-shot img'));
   if (fromGuest) {
     history.replaceState({...history.state, selectedRoom:id}, '');
-    if (matchMedia('(max-width:760px)').matches && selected.getBoundingClientRect().top < -12) {
-      selected.scrollIntoView({block:'start'});
-    }
   }
 }
 
 function restoreRoom() {
   const params = fragmentParams();
   const section = params.get('at') || location.hash.slice(1);
-  const fromURL = ['zaly','russkiy','turetskiy','privat'].includes(section)
-    ? (params.get('zal') || (section === 'zaly' ? new URLSearchParams(location.search).get('zal') : section)) : null;
-  const pick = [history.state?.selectedRoom,fromURL].find(id=>entries.some(entry=>entry.id===id)) || entries[0]?.id;
+  const query = new URLSearchParams(location.search);
+  const sectionHasRoom = section === 'zaly' || section === 'zapis';
+  const addressRoom = sectionHasRoom ? params.get('zal') || query.get('zal') : section;
+  const current = entries.find(entry => entry.hasAttribute('data-selected'))?.id;
+  const draftRoom = section === 'zapis' ? history.state?.visitDraft?.space : null;
+  const pick = [draftRoom, history.state?.selectedRoom, addressRoom, current, entries[0]?.id]
+    .find(id => entries.some(entry => entry.id === id));
   selectRoom(pick);
 }
 
 if (entries.length) {
   restoreRoom();
+  const spaceField = document.getElementById('space');
+  spaceField?.addEventListener('input', () => {
+    if (!entries.some(entry => entry.id === spaceField.value && entry.hasAttribute('data-selected'))) {
+      selectRoom(spaceField.value, true);
+    }
+  });
   roomButtons.forEach((button, index) => {
-    button.addEventListener('click', () => { if (!entries[index].hasAttribute('data-selected')) selectRoom(button.dataset.room,true); });
+    button.addEventListener('click', () => {
+      const room = button.dataset.room;
+      if (!entries[index].hasAttribute('data-selected')) selectRoom(room, true);
+      if (spaceField && spaceField.value !== room) {
+        spaceField.value = room;
+        spaceField.dispatchEvent(new Event('input', {bubbles:true}));
+      }
+    });
     button.addEventListener('keydown', event => {
-      const keys = {ArrowDown:(index+1)%entries.length,ArrowUp:(index+entries.length-1)%entries.length,Home:0,End:entries.length-1};
+      const next = (index + 1) % entries.length;
+      const previous = (index + entries.length - 1) % entries.length;
+      const keys = {ArrowDown:next, ArrowRight:next, ArrowUp:previous, ArrowLeft:previous, Home:0, End:entries.length - 1};
       if (!Object.hasOwn(keys,event.key)) return;
       event.preventDefault();
       roomButtons[keys[event.key]].focus();
