@@ -16,6 +16,10 @@
   const estimate = document.querySelector('.estimate');
   const liveEstimate = document.getElementById('estimate-live');
   const requestResult = document.getElementById('request-result');
+  const requestTitle = document.getElementById('request-title');
+  const requestWhen = document.getElementById('request-when');
+  const requestAmount = document.getElementById('request-amount');
+  const requestAmountLabel = document.getElementById('request-amount-label');
   const requestText = document.getElementById('request-text');
   const copyStatus = document.getElementById('copy-status');
   const steppers = Array.from(visitForm.querySelectorAll('[data-counter]'));
@@ -87,11 +91,14 @@
     return { count, length, rental, service, additional, extra, total: rental + service + extra };
   }
 
-  function cottageEstimate() {
+  function cottageRate() {
     const weekday = date.value ? new Date(date.value + 'T12:00:00Z').getUTCDay() : null;
-    const weekend = weekday === 0 || weekday === 6;
-    const weekdayRate = Number(chosenSpace().dataset.weekdayRate || 50000);
-    const rate = weekend
+    return weekday === 0 || weekday === 6 ? null : Number(chosenSpace().dataset.weekdayRate || 50000);
+  }
+
+  function cottageEstimate() {
+    const weekdayRate = cottageRate();
+    const rate = weekdayRate === null
       ? '<p class="estimate-total estimate-total--words">По договорённости</p>'
       : '<p class="estimate-total">' + priceMarkup(weekdayRate) + '</p><p class="estimate-period">За сутки в будни. В праздники — по договорённости.</p>';
     return rate +
@@ -122,7 +129,7 @@
       next = '<p class="estimate-total">' + priceMarkup(sum.total) + '</p><dl class="estimate-items">' +
         items.map(([name, value]) => '<div><dt>' + name + '</dt><dd>' + price(value) + '</dd></div>').join('') +
         '</dl>' +
-        '<p class="estimate-note">Стоимость и время подтвердит администратор.</p>';
+        '<p class="estimate-note">Время и стоимость подтверждает администратор по телефону.</p>';
     }
     if (previousEstimate !== next) {
       liveEstimate.innerHTML = next;
@@ -147,6 +154,7 @@
 
   function resetResult() {
     requestResult.hidden = true;
+    estimate.hidden = false;
     requestText.value = '';
     copyStatus.textContent = '';
   }
@@ -222,14 +230,31 @@
     event.preventDefault();
     if (!validate()) return;
     const day = dayFormatter.format(new Date(date.value + 'T12:00:00+03:00'));
-    const details = ['Хочу уточнить запись в банную усадьбу на Хуторке.', chosenSpace().textContent.trim(), day + ' · ' + guestText(guests.valueAsNumber)];
-    if (!isCottage()) {
+    const room = chosenSpace().textContent.trim();
+    const company = guestText(guests.valueAsNumber);
+    const details = ['Хочу уточнить запись в банную усадьбу на Хуторке.', room, day + ' · ' + company];
+    const summary = [day];
+    const cottage = isCottage();
+    const value = cottage ? cottageRate() : calculate().total;
+    if (cottage) {
+      details.push(value === null ? 'Стоимость на эту дату — по договорённости.'
+        : 'В будни — ' + price(value) + ' за сутки. В праздники — по договорённости.');
+    } else {
+      summary.push(time.value, hoursText(hours.valueAsNumber));
       details.push('Начало в ' + time.value + ', ' + hoursText(hours.valueAsNumber) + '.');
-      details.push('Предварительный расчёт — ' + price(calculate().total) + '.');
+      details.push('Предварительная стоимость — ' + price(value) + '.');
     }
+    summary.push(company);
+    requestTitle.textContent = room;
+    requestWhen.textContent = summary.join(' · ');
+    requestAmountLabel.textContent = cottage && value !== null ? 'Тариф за сутки в будни' : 'Предварительная стоимость';
+    requestAmount.innerHTML = value === null ? 'По договорённости' : priceMarkup(value);
+    requestAmount.classList.toggle('visit-confirm-amount--words', value === null);
     requestText.value = details.join('\n');
+    estimate.hidden = true;
     requestResult.hidden = false;
-    requestResult.focus();
+    requestResult.focus({preventScroll:true});
+    requestResult.scrollIntoView({block:'start', behavior:'instant'});
   });
 
   document.getElementById('copy-request').addEventListener('click', async () => {
@@ -244,7 +269,10 @@
       copyStatus.textContent = 'Текст выделен. Скопируйте его в меню устройства.';
     }
   });
-  document.getElementById('edit-visit')?.addEventListener('click', () => space.focus());
+  document.getElementById('edit-visit')?.addEventListener('click', () => {
+    resetResult();
+    space.focus();
+  });
 
   function applyPreset(roomId, guestCount) {
     const previousRoom = space.value;
