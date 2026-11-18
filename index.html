@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <meta name="referrer" content="no-referrer">
-  <meta name="theme-color" content="#23362b">
+  <meta name="theme-color" content="#311e1d">
   <title>Демоверсия сайта · На Хуторке</title>
   <script>
     (() => {
@@ -19,31 +19,31 @@
       icon.href = new URL('assets/favicon.png', document.baseURI);
       const style = document.createElement('link');
       style.rel = 'stylesheet';
-      style.href = new URL('styles.css?v=4fc1583e42a6cad4', document.baseURI);
+      style.href = new URL('styles.css?v=11b9a3cc4558f13a', document.baseURI);
       document.head.append(icon, style);
     })();
   </script>
   <style>
     @view-transition { navigation: auto; }
     @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
-    .preview-shell { margin: 0; min-height: 100svh; padding: clamp(24px,6vw,96px); box-sizing: border-box; display: grid; align-content: center; color: #f6edda; background: #23362b; font: 1rem/1.5 'Golos Text',sans-serif; }
+    .preview-shell { margin: 0; min-height: 100svh; padding: clamp(24px,6vw,96px); box-sizing: border-box; display: grid; align-content: center; color: var(--cream,#f9ecd2); background: var(--wine,var(--forest,#311e1d)); font: 1rem/1.5 'Golos Text',sans-serif; }
     .preview-sheet { width: min(100%,52rem); margin: auto; }
-    .preview-brand { display: block; margin: 0 0 clamp(2.5rem,9vh,6rem); font: 600 1.8rem/1 'Cormorant Garamond',Georgia,serif; }
-    .preview-code { display: block; color: #e6bd83; font: 500 clamp(6rem,17vw,13rem)/.8 'Cormorant Garamond',Georgia,serif; font-variant-numeric: lining-nums; }
-    .preview-title { font: 500 clamp(2.7rem,6vw,5.5rem)/.98 'Cormorant Garamond',Georgia,serif; margin: .22em 0 .35em; color: inherit; }
+    .preview-brand { margin: 0 0 clamp(2.5rem,9vh,6rem); font: 400 1.65rem/1.1 var(--display,var(--serif,'Yeseva One',Georgia,serif)); }
+    .preview-code { display: block; color: var(--gold,#e6b574); font: 400 clamp(6rem,17vw,13rem)/.9 var(--display,var(--serif,'Yeseva One',Georgia,serif)); font-variant-numeric: lining-nums; }
+    .preview-title { font: 400 clamp(2.5rem,5.5vw,5rem)/1.05 var(--display,var(--serif,'Yeseva One',Georgia,serif)); margin: .25em 0 .45em; color: inherit; }
     .preview-status { max-width: 43ch; margin: 0; }
     .preview-form { margin-top: 1.5rem; max-width: 36rem; }
     .preview-form label { display: block; margin-bottom: .45rem; }
     .preview-fields { display: flex; flex-wrap: wrap; gap: .65rem; }
-    .preview-fields input,.preview-fields button { font: inherit; border: 1px solid #e6d7bd; border-radius: 2px; min-height: 3rem; box-sizing: border-box; padding: .65rem 1rem; }
-    .preview-fields input { flex: 1 1 15rem; min-width: 0; background: #f6edda; color: #24342a; }
-    .preview-fields button { background: #e6bd83; color: #201a13; cursor: pointer; }
+    .preview-fields input,.preview-fields button { font: inherit; border: 1px solid var(--gold,#e6b574); border-radius: 2px; min-height: 3rem; box-sizing: border-box; padding: .65rem 1rem; }
+    .preview-fields input { flex: 1 1 15rem; min-width: 0; background: var(--paper,#f2e3c8); color: var(--ink,#30211e); }
+    .preview-fields button { background: var(--gold,#e6b574); color: var(--ink,#30211e); cursor: pointer; }
     .preview-fields :focus-visible { outline: 3px solid #fff2dc; outline-offset: 3px; }
     .preview-form [role=alert] { margin: .6rem 0 0; color: #ffe2ad; }
     .preview-shell [hidden] { display: none; }
   </style>
 </head>
-<body class="preview-shell" data-bundle="view-a55697b99b03d8dc.bin" data-page="index.html" data-layout="landing-v3">
+<body class="preview-shell" data-bundle="view-9259d9bd1d3e8b40.bin" data-page="index.html" data-layout="landing-v3">
   <main class="preview-sheet">
     <p class="preview-brand">На Хуторке</p>
     <div id="preview-heading" hidden><h1 class="preview-title">Демоверсия усадьбы</h1></div>
@@ -57,7 +57,7 @@
   </main>
   <script>
     const runtime = document.createElement('script');
-    runtime.src = new URL('preview.js?v=6403000e6d3a6171', document.baseURI);
+    runtime.src = new URL('preview.js?v=b8aad8bee33a48d3', document.baseURI);
     document.body.append(runtime);
   </script>
 </body>

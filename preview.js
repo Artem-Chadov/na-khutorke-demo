@@ -126,7 +126,7 @@ function hydratePhotos(photos, key) {
     const box = image.getBoundingClientRect();
     let slot = box.width;
     // В высоком кадре исходник разворачивается по высоте, а его боковые края уходят за границы экрана.
-    if (image.closest('.cover-scene') && getComputedStyle(image).objectFit === 'cover') {
+    if (image.closest('.cover-estate, .cover-sauna') && getComputedStyle(image).objectFit === 'cover') {
       const width = Number(image.getAttribute('width'));
       const height = Number(image.getAttribute('height'));
       if (width > 0 && height > 0) slot = Math.max(slot, box.height * width / height);

@@ -46,23 +46,19 @@ if (cover) {
   const toggle = cover.querySelector('.peek');
   const inside = cover.querySelector('.cover-sauna');
   const picture = inside.querySelector('img');
-  const label = toggle.querySelector('.peek-label');
-  const returnPhoto = toggle.querySelector('.peek-outside');
-  returnPhoto.hidden = true;
   const status = cover.querySelector('[data-cover-status]');
   let requested = false;
   function showScene() {
     cover.dataset.scene = requested ? 'inside' : 'outside';
-    returnPhoto.hidden = !requested;
     toggle.setAttribute('aria-pressed', String(requested));
     inside.setAttribute('aria-hidden', String(!requested));
     cover.querySelector('.cover-estate').setAttribute('aria-hidden', String(requested));
-    toggle.setAttribute('aria-label', requested ? 'Показать двор усадьбы' : 'Показать парную');
-    label.textContent = requested ? 'Вернуться во двор' : 'Заглянуть в парную';
+    toggle.setAttribute('aria-label', requested ? 'Вернуться в комнату' : 'Посмотреть двор');
+    toggle.title = toggle.getAttribute('aria-label');
   }
   picture.addEventListener('load', showScene);
   picture.addEventListener('error', () => {
-    if (requested) { requested = false; showScene(); status.textContent = 'Фотография парной не загрузилась. Попробуйте ещё раз.'; }
+    if (requested) { requested = false; showScene(); status.textContent = 'Фотография двора не загрузилась. Попробуйте ещё раз.'; }
   });
   toggle.hidden = false;
   toggle.addEventListener('click', () => {
@@ -71,8 +67,6 @@ if (cover) {
     if (!requested) { showScene(); return; }
     inside.hidden = false;
     loadPhoto(picture);
-    returnPhoto.hidden = false;
-    loadPhoto(returnPhoto);
     if (picture.complete && picture.naturalWidth) showScene();
   });
 }
@@ -93,6 +87,7 @@ function selectRoom(id, fromGuest = false) {
     const panel = document.getElementById(button.getAttribute('aria-controls'));
     panel.hidden = !active;
     panel.toggleAttribute('data-current', active);
+    if (active && (fromGuest || entry !== entries[0])) loadPhoto(panel.querySelector('.room-shot img'));
     panel.toggleAttribute('data-opened', active && fromGuest);
   }
   if (fromGuest) {
