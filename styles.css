@@ -614,8 +614,8 @@ figcaption { font-size: var(--note-size); line-height: 1.45; }
 .inline-link { font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
 .booking-grid > .form-action, .booking-grid > .request-result { grid-column: 1; }
 .booking-grid > .visit-form, .booking-grid > .form-action { display: none; }
-.has-js .booking-grid > .visit-form { display: grid; }
-.has-js .booking-grid > .form-action { display: block; }
+.js-layout .booking-grid > .visit-form { display: grid; }
+.js-layout .booking-grid > .form-action { display: block; }
 .visit-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 17px 16px; }
 .full-field { grid-column: 1/-1; }
 .field { display: grid; min-width: 0; align-content: start; gap: 7px; }
@@ -738,7 +738,7 @@ figcaption { font-size: var(--note-size); line-height: 1.45; }
   .masthead-actions { align-self: center; }
   .masthead-actions .button { padding: 8px 12px; font-size: var(--note-size); }
   .main-nav { grid-column: 1/-1; gap: 9px 18px; }
-  .has-js .main-nav {
+  .js-layout .main-nav {
     display: none;
     position: absolute;
     top: 100%;
@@ -747,9 +747,9 @@ figcaption { font-size: var(--note-size); line-height: 1.45; }
     background: var(--forest);
     border-bottom: 1px solid #768675;
   }
-  .has-js .main-nav.is-open { display: grid; }
+  .js-layout .main-nav.is-open { display: grid; }
   .main-nav a { min-height: 49px; }
-  .has-js .menu-toggle {
+  .js-layout .menu-toggle {
     display: inline-flex;
     flex-direction: column;
     align-items: center;
