@@ -31,6 +31,51 @@ menu.addEventListener('click', (event) => {
 });
 narrowScreen.addEventListener('change', () => setMenu(false));
 
+function loadSelectedPhoto(picture) {
+  if (!picture.dataset.deferSrc) return;
+  if (picture.dataset.deferSrcset) picture.srcset = picture.dataset.deferSrcset;
+  picture.src = picture.dataset.deferSrc;
+  delete picture.dataset.deferSrcset;
+  delete picture.dataset.deferSrc;
+}
+
+const gallery = document.querySelector('[data-cover-gallery]');
+if (gallery) {
+  const controls = gallery.querySelector('.cover-choices');
+  const choices = Array.from(controls.querySelectorAll('button'));
+  const shots = choices.map(choice => document.getElementById(choice.getAttribute('aria-controls')));
+  const status = gallery.querySelector('[data-cover-status]');
+  let requested = 0;
+
+  function reveal(index) {
+    if (index !== requested) return;
+    shots.forEach((shot, position) => {
+      const selected = index === position;
+      shot.classList.toggle('is-current', selected);
+      shot.setAttribute('aria-hidden', String(!selected));
+      choices[position].setAttribute('aria-pressed', String(selected));
+    });
+  }
+
+  choices.forEach((choice, index) => {
+    const shot = shots[index];
+    const picture = shot.querySelector('img');
+    picture.addEventListener('load', () => reveal(index));
+    picture.addEventListener('error', () => {
+      if (requested === index) status.textContent = 'Не удалось загрузить фотографию.';
+    });
+    choice.addEventListener('click', () => {
+      requested = index;
+      status.textContent = '';
+      shot.hidden = false;
+      picture.loading = 'eager';
+      loadSelectedPhoto(picture);
+      if (picture.complete && picture.naturalWidth > 0) reveal(index);
+    });
+  });
+  controls.hidden = false;
+}
+
 const explorer = document.querySelector('[data-room-explorer]');
 if (explorer) {
   const tablist = explorer.querySelector('[data-room-tabs]');
@@ -52,6 +97,7 @@ if (explorer) {
       tab.tabIndex = selected ? 0 : -1;
       panels[index].hidden = !selected;
       panels[index].classList.toggle('is-changing', selected && animate);
+      if (selected) loadSelectedPhoto(panels[index].querySelector('img'));
     });
     if (animate) history.replaceState({ ...history.state, selectedRoom: tabs[current].dataset.room }, '');
   }

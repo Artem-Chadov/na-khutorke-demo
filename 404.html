@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#23362b">
+  <title>404 · На Хуторке</title>
+  <script>
+    (() => {
+      const published = '/na-khutorke-demo/';
+      const root = location.pathname.startsWith(published) ? published : '/';
+      const base = document.createElement('base');
+      base.href = root;
+      document.head.append(base);
+      const icon = document.createElement('link');
+      icon.rel = 'icon';
+      icon.href = new URL('assets/favicon.png', document.baseURI);
+      const style = document.createElement('link');
+      style.rel = 'stylesheet';
+      style.href = new URL('styles.css?v=926245ff557cf6e4', document.baseURI);
+      document.head.append(icon, style);
+    })();
+  </script>
+  <style>
+    @view-transition { navigation: auto; }
+    @media (prefers-reduced-motion: reduce) { @view-transition { navigation: none; } }
+    .preview-shell { margin: 0; min-height: 100svh; padding: clamp(24px,6vw,96px); box-sizing: border-box; display: grid; align-content: center; color: #f6edda; background: #23362b; font: 1rem/1.5 'Golos Text',sans-serif; }
+    .preview-sheet { width: min(100%,52rem); margin: auto; }
+    .preview-brand { display: block; margin: 0 0 clamp(2.5rem,9vh,6rem); font: 600 1.8rem/1 'Cormorant Garamond',Georgia,serif; }
+    .preview-code { display: block; color: #e6bd83; font: 500 clamp(6rem,17vw,13rem)/.8 'Cormorant Garamond',Georgia,serif; font-variant-numeric: lining-nums; }
+    .preview-title { font: 500 clamp(2.7rem,6vw,5.5rem)/.98 'Cormorant Garamond',Georgia,serif; margin: .22em 0 .35em; color: inherit; }
+    .preview-status { max-width: 43ch; margin: 0; }
+    .preview-form { margin-top: 1.5rem; max-width: 36rem; }
+    .preview-form label { display: block; margin-bottom: .45rem; }
+    .preview-fields { display: flex; flex-wrap: wrap; gap: .65rem; }
+    .preview-fields input,.preview-fields button { font: inherit; border: 1px solid #e6d7bd; border-radius: 2px; min-height: 3rem; box-sizing: border-box; padding: .65rem 1rem; }
+    .preview-fields input { flex: 1 1 15rem; min-width: 0; background: #f6edda; color: #24342a; }
+    .preview-fields button { background: #e6bd83; color: #201a13; cursor: pointer; }
+    .preview-fields :focus-visible { outline: 3px solid #fff2dc; outline-offset: 3px; }
+    .preview-form [role=alert] { margin: .6rem 0 0; color: #ffe2ad; }
+    .preview-shell [hidden] { display: none; }
+  </style>
+</head>
+<body class="preview-shell" data-bundle="view-9649c8a9bd4a8972.bin" data-page="404.html">
+  <main class="preview-sheet">
+    <p class="preview-brand">На Хуторке</p>
+    <div id="preview-heading"><span class="preview-code" aria-hidden="true">404</span><h1 class="preview-title">Вход с другой стороны</h1></div>
+    <p class="preview-status" id="preview-status" role="status">Открываем сайт…</p>
+    <form class="preview-form" id="preview-recovery" hidden>
+      <label for="preview-address">Ссылка на демоверсию</label>
+      <div class="preview-fields"><input id="preview-address" type="url" autocomplete="off" spellcheck="false" required aria-describedby="preview-input-error"><button type="submit">Открыть сайт</button></div>
+      <p id="preview-input-error" role="alert" hidden></p>
+    </form>
+    <noscript><style>#preview-status { display: none; }</style><p>Для просмотра включите JavaScript в браузере и откройте полную ссылку из сообщения.</p></noscript>
+  </main>
+  <script>
+    const runtime = document.createElement('script');
+    runtime.src = new URL('preview.js?v=b7591c3487de2a39', document.baseURI);
+    document.body.append(runtime);
+  </script>
+</body>
+</html>

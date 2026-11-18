@@ -28,6 +28,7 @@ const rates = {
 };
 
 const price = (value) => amount.format(value) + ' ₽';
+const priceMarkup = value => amount.format(value) + ' <span class="currency">₽</span>';
 const chosenSpace = () => space.selectedOptions[0];
 const isCottage = () => space.value === 'kottedzh';
 const moscowTime = () => clock.format(new Date()).split(' ');
@@ -85,7 +86,7 @@ function cottageEstimate() {
   const weekend = weekday === 0 || weekday === 6;
   const rate = weekend
     ? '<p class="estimate-total estimate-total--words">По договорённости</p>'
-    : '<p class="estimate-total">50 000 ₽</p><p>Тариф для обычных будней.</p>';
+    : '<p class="estimate-total">' + priceMarkup(50000) + '</p><p>Тариф для обычных будней.</p>';
   return rate +
     '<p class="estimate-note">Два часа в бане включены. Стоимость на вашу дату и вместимость уточнит администратор.</p>';
 }
@@ -111,8 +112,8 @@ function updateEstimate() {
     if (sum.extra) items.push(['Доплата за ' + guestText(sum.additional), sum.extra]);
     next = '<dl class="estimate-items">' +
       items.map(([name, value]) => '<div><dt>' + name + '</dt><dd>' + price(value) + '</dd></div>').join('') +
-      '</dl><p class="estimate-total">' + price(sum.total) + '</p>' +
-      '<p class="estimate-note">Предварительный расчёт. Стоимость и свободное время подтвердит администратор.</p>';
+      '</dl><p class="estimate-total">' + priceMarkup(sum.total) + '</p>' +
+      '<p class="estimate-note">Стоимость и время подтвердит администратор.</p>';
   }
   if (liveEstimate.dataset.output !== next) {
     liveEstimate.innerHTML = next;
@@ -211,9 +212,15 @@ document.getElementById('copy-request').addEventListener('click', async () => {
   }
 });
 
-const initialSpace = new URLSearchParams(location.search).get('zal');
+const parameters = new URLSearchParams(location.search);
+const initialSpace = parameters.get('zal');
 if (Array.from(space.options).some(option => option.value === initialSpace)) space.value = initialSpace;
 visitForm.noValidate = true;
 date.min = moscowTime()[0];
 updateSpace();
+const initialGuests = Number(parameters.get('gosti'));
+if (Number.isSafeInteger(initialGuests) && initialGuests >= Number(guests.min)
+    && (!guests.max || initialGuests <= Number(guests.max))) {
+  guests.value = String(initialGuests);
+}
 updateEstimate();
